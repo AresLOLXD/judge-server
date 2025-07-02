@@ -24,6 +24,9 @@ from dmoj.judgeenv import skip_self_test
 from dmoj.result import Result
 from dmoj.utils.error import print_protection_fault
 from dmoj.utils.unicode import utf8bytes, utf8text
+import logging
+
+log = logging.getLogger(__name__)
 
 # recomment = re.compile(r'/\*.*?\*/', re.DOTALL | re.U)
 # restring = re.compile(r''''(?:\\.|[^'\\])'|"(?:\\.|[^"\\])*"''', re.DOTALL | re.U)
