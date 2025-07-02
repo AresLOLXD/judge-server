@@ -1,7 +1,18 @@
+[project]
+name = "judge-server-rekarel"
+version = "0.1.0"
+description = "A fork of the DMOJ judge server with support for Rekarel executors."
+authors = [
+    { name = "AresLOLXD", email = "aresulises8@hotmail.com" },
+    { name = "kishtarn555", email = "kishtarn555@gmail.com" },
+]
+requires-python = ">=3.10"
+
 [build-system]
 requires = ["setuptools", "wheel", "Cython"]
 
+
 [tool.black]
 line-length = 120
-skip-string-normalization = true  # Black prefers double-quotes
+skip-string-normalization = true # Black prefers double-quotes
 extend-exclude = '^/testsuite/'
