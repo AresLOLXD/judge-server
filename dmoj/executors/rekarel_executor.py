@@ -4,18 +4,25 @@ import os
 import re
 import subprocess
 import sys
+import traceback
 from collections import deque
 from pathlib import Path, PurePath
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 from dmoj.cptbox import Debugger, TracedPopen
-from dmoj.cptbox.filesystem_policies import ExactDir, ExactFile, FilesystemAccessRule, RecursiveDir
+from dmoj.cptbox.filesystem_policies import (
+    ExactDir,
+    ExactFile,
+    FilesystemAccessRule,
+    RecursiveDir,
+)
 from dmoj.error import CompileError, InternalError
 from dmoj.executors.base_executor import AutoConfigOutput, VersionFlags, print_ansi
 from dmoj.executors.compiled_executor import CompiledExecutor
 from dmoj.executors.mixins import SingleDigitVersionMixin
 from dmoj.judgeenv import skip_self_test
 from dmoj.result import Result
+from dmoj.utils.error import print_protection_fault
 from dmoj.utils.unicode import utf8bytes, utf8text
 
 # recomment = re.compile(r'/\*.*?\*/', re.DOTALL | re.U)
@@ -53,7 +60,7 @@ from dmoj.utils.unicode import utf8bytes, utf8text
 
 
 class KarelExecutor(CompiledExecutor):
-    ext = 'kcode'
+    ext = "kcode"
 
     vm: str
     compiler: str
@@ -61,18 +68,18 @@ class KarelExecutor(CompiledExecutor):
 
     # This syscalls are needed by Node
     compiler_syscalls = [
-        'capget',
-        'eventfd2',
-        'shutdown',
-        'pkey_alloc',
-        'pkey_free',
+        "capget",
+        "eventfd2",
+        "shutdown",
+        "pkey_alloc",
+        "pkey_free",
     ]
     # Node needs to access this files
     compiler_read_fs: List[FilesystemAccessRule] = [
-        ExactFile('/usr/lib/ssl/openssl.cnf'),
+        ExactFile("/usr/lib/ssl/openssl.cnf"),
     ]
 
-    #This is due to the script-like compiler
+    # This is due to the script-like compiler
     def get_compiler_read_fs(self) -> List[FilesystemAccessRule]:
         fs = self.get_fs() + self.compiler_read_fs
         compiler = self.get_compiler()
@@ -89,23 +96,22 @@ class KarelExecutor(CompiledExecutor):
         # FIXME For some reason, Node touches all paths from /home to the js file!
         def iterate(path, fs):
             current = path
-            while current != os.path.dirname(current):  # Stop at one level before the root
+            while current != os.path.dirname(
+                current
+            ):  # Stop at one level before the root
                 fs += [ExactDir(current)]  # Print or process the current directory
                 current = os.path.dirname(current)
-        iterate(
-            compiler_dir, 
-            fs
-        )
+
+        iterate(compiler_dir, fs)
         return fs
-    
+
     def get_compile_env(self):
         env = os.environ.copy()
         if env is None:
             env = {}
-        # Disable io_uring due to potential security implications
-        env['UV_USE_IO_URING'] = '0'
+        env["UV_USE_IO_URING"] = "0"
         return env
-    
+
     # fsize = 1048576  # Allow 1 MB for writing crash log.
     # address_grace = 786432
 
@@ -156,7 +162,9 @@ class KarelExecutor(CompiledExecutor):
     #     kwargs['orig_memory'], kwargs['memory'] = kwargs['memory'], 0
     #     return super().launch(*args, **kwargs)
 
-    def populate_result(self, stderr: bytes, result: Result, process: TracedPopen) -> None:
+    def populate_result(
+        self, stderr: bytes, result: Result, process: TracedPopen
+    ) -> None:
         super().populate_result(stderr, result, process)
         if process.is_ir:
             if process.returncode == 20:
@@ -164,9 +172,8 @@ class KarelExecutor(CompiledExecutor):
             elif process.returncode >= 48 and process.returncode <= 63:
                 result.result_flag |= Result.TLE
 
-
     def parse_feedback_from_stderr(self, stderr: bytes, process: TracedPopen) -> str:
-        exception = 'Error de juez (Error desconocido)'
+        exception = "Error de juez (Error desconocido)"
         if process.returncode == 2:
             exception = "Error de juez (Versión de la VM incorrecta)"
         elif process.returncode == 16:
@@ -206,7 +213,6 @@ class KarelExecutor(CompiledExecutor):
     def get_vm(cls) -> Optional[str]:
         return cls.runtime_dict.get(cls.vm)
 
-
     @classmethod
     def get_compiler(cls) -> Optional[str]:
         return cls.runtime_dict.get(cls.compiler)
@@ -229,7 +235,7 @@ class KarelExecutor(CompiledExecutor):
     def get_versionable_commands(cls) -> List[Tuple[str, str]]:
         compiler = cls.get_compiler()
         assert compiler is not None
-        return [('karel', compiler)]
+        return [("karel", compiler)]
 
     def get_compile_args(self) -> List[str]:
         compiler = self.get_compiler()
@@ -237,69 +243,76 @@ class KarelExecutor(CompiledExecutor):
         assert self._code is not None
         # TODO: Maybe it needs an output file
         return [
-            compiler, 
-            'compile', 
+            compiler,
+            "compile",
             os.path.realpath(self._code),
-            '-o',
-            self.get_compiled_file()
+            "-o",
+            self.get_compiled_file(),
         ]
-    
+
     def get_cmdline(self, **kwargs):
-        return [
-            self.get_vm(),
-            self.problem
-        ]
-    
+        return [self.get_vm(), self.problem]
+
     # This is mostly the same as base_executor.run_self_test, but instead of checking echolalia, it tests for karel worlds
     @classmethod
-    def run_self_test(cls, output: bool = True, error_callback: Optional[Callable[[Any], Any]] = None) -> bool:
+    def run_self_test(
+        cls, output: bool = True, error_callback: Optional[Callable[[Any], Any]] = None
+    ) -> bool:
         if not cls.test_program:
             return True
 
         if output:
-            print_ansi(f'Self-testing #ansi[{cls.get_executor_name()}](|underline):'.ljust(39), end=' ')
+            print_ansi(
+                f"Self-testing #ansi[{cls.get_executor_name()}](|underline):".ljust(39),
+                end=" ",
+            )
         try:
             executor = cls(cls.test_name, utf8bytes(cls.test_program))
             proc = executor.launch(
-                time=cls.test_time, memory=cls.test_memory, stdin=subprocess.PIPE, stdout=subprocess.PIPE
+                time=cls.test_time,
+                memory=cls.test_memory,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
             )
             # Instead of checking for a program with Echolalia, check actual karel worlds
             test_message = b'<ejecucion version="1.1"><condiciones instruccionesMaximasAEjecutar="10000000" longitudStack="65000" memoriaStack="65000" llamadaMaxima="5"/><mundos><mundo nombre="mundo_0" ancho="100" alto="100"/></mundos><programas tipoEjecucion="CONTINUA" intruccionesCambioContexto="1" milisegundosParaPasoAutomatico="0"><programa nombre="p1" ruta="{$2$}" mundoDeEjecucion="mundo_0" xKarel="1" yKarel="1" direccionKarel="NORTE" mochilaKarel="0"/></programas></ejecucion>'
-            expected_output = (b"""<resultados>
+            expected_output = b"""<resultados>
 	<programas>
 		<programa nombre="p1" resultadoEjecucion="FIN PROGRAMA"/>
 	</programas>
 </resultados>
 """
-            )
-            stdout, stderr = proc.communicate(test_message + b'\n')
+            stdout, stderr = proc.communicate(test_message + b"\n")
 
             if proc.is_tle:
-                print_ansi('#ansi[Time Limit Exceeded](red|bold)')
+                print_ansi("#ansi[Time Limit Exceeded](red|bold)")
                 return False
             if proc.is_mle:
-                print_ansi('#ansi[Memory Limit Exceeded](red|bold)')
+                print_ansi("#ansi[Memory Limit Exceeded](red|bold)")
                 return False
 
             res = stdout.strip() == expected_output.strip() and not stderr
             if output:
                 # Cache the versions now, so that the handshake packet doesn't take ages to generate
                 cls.get_runtime_versions()
-                usage = f'[{proc.execution_time:.3f}s, {proc.max_memory} KB]'
-                print_ansi(f'{["#ansi[Failed](red|bold) ", "#ansi[Success](green|bold)"][res]} {usage:<19}', end=' ')
+                usage = f"[{proc.execution_time:.3f}s, {proc.max_memory} KB]"
                 print_ansi(
-                    ', '.join(
+                    f"{['#ansi[Failed](red|bold) ', '#ansi[Success](green|bold)'][res]} {usage:<19}",
+                    end=" ",
+                )
+                print_ansi(
+                    ", ".join(
                         [
-                            f'#ansi[{runtime}](cyan|bold) {".".join(map(str, version))}'
+                            f"#ansi[{runtime}](cyan|bold) {'.'.join(map(str, version))}"
                             for runtime, version in cls.get_runtime_versions()
                         ]
                     )
                 )
             if stdout.strip() != test_message.strip() and error_callback:
-                error_callback('Got unexpected stdout output:\n' + utf8text(stdout))
+                error_callback("Got unexpected stdout output:\n" + utf8text(stdout))
             if stderr:
                 if error_callback:
-                    error_callback('Got unexpected stderr output:\n' + utf8text(stderr))
+                    error_callback("Got unexpected stderr output:\n" + utf8text(stderr))
                 else:
                     print(stderr, file=sys.stderr)
             if proc.protection_fault:
@@ -307,33 +320,49 @@ class KarelExecutor(CompiledExecutor):
             return res
         except Exception:
             if output:
-                print_ansi('#ansi[Failed](red|bold)')
+                print_ansi("#ansi[Failed](red|bold)")
                 traceback.print_exc()
             if error_callback:
                 error_callback(traceback.format_exc())
             return False
 
-
-    
     def get_compile_popen_kwargs(self) -> Dict[str, Any]:
-        return {'executable': utf8bytes(self.get_compiler())}
+        return {"executable": utf8bytes(self.get_compiler())}
 
     def get_compile_args(self) -> List[str]:
         compiler = self.get_compiler()
         assert compiler is not None
         assert self._code is not None
         # TODO: Maybe it needs an output file
-        return [compiler, 'compile', self._code, '-o', self.get_compiled_file()]
+        return [compiler, "compile", self._code, "-o", self.get_compiled_file()]
 
     def handle_compile_error(self, output: bytes):
-        if b'is public, should be declared in a file named' in utf8bytes(output):
-            raise CompileError('You are a troll. Trolls are not welcome. As a judge, I sentence your code to death.\n')
+        if b"is public, should be declared in a file named" in utf8bytes(output):
+            raise CompileError(
+                "You are a troll. Trolls are not welcome. As a judge, I sentence your code to death.\n"
+            )
         raise CompileError(output)
 
     @classmethod
     def get_find_first_mapping(cls) -> Optional[Dict[str, List[str]]]:
-        return {
-            "rekarel": ["rekarel"],
-            "karel": ["karel"]
-        }
+        return {"rekarel": ["rekarel"], "karel": ["karel"]}
 
+
+if __name__ == "__main__":
+    # This is just to test the executor
+    KarelExecutor.initialize()
+    executor = KarelExecutor(
+        "test",
+        """\
+usa rekarel.globales;
+iniciar-programa
+	inicia-ejecucion
+		{ TODO poner codigo aqui }
+		apagate;
+	termina-ejecucion
+finalizar-programa""",
+    )
+    if executor.run_self_test():
+        print("Self-test passed!")
+    else:
+        print("Self-test failed!")
