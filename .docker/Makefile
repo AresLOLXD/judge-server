@@ -1,4 +1,4 @@
-GIT_TAG ?= master
+GIT_TAG ?= AddKarel
 TAG ?= latest
 
 .PHONY: all judge-tier1 judge-tier2 judge-tier3
