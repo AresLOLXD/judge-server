@@ -141,7 +141,7 @@ cptbox_sources = [
 if not has_pyx:
     cptbox_sources[0] = cptbox_sources[0].replace('.pyx', '.cpp')
 
-SOURCE_DIR = os.path.dirname(__file__)
+SOURCE_DIR = os.path.relpath(os.path.dirname(os.path.abspath(__file__)))
 cptbox_sources = [os.path.join(SOURCE_DIR, 'dmoj', 'cptbox', f) for f in cptbox_sources]
 
 libs = ['rt']

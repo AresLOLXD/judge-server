@@ -7,6 +7,7 @@ authors = [
     { name = "kishtarn555", email = "kishtarn555@gmail.com" },
 ]
 requires-python = ">=3.10"
+dynamic = ["readme", "classifiers", "keywords", "urls", "dependencies", "optional-dependencies", "scripts"]
 
 [build-system]
 requires = ["setuptools", "wheel", "Cython"]
