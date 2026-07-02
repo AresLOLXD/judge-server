@@ -149,7 +149,7 @@ and will be merged automatically into the `judge.yml` provided.
 ```
 $ git clone --recursive https://github.com/DMOJ/judge-server.git
 $ cd judge-server/.docker
-$ make judge-tier1
+$ make runtimes-tier1
 $ exec docker run \
     --name judge \
     -p "$(ip addr show dev enp1s0 | perl -ne 'm@inet (.*)/.*@ and print$1 and exit')":9998:9998 \
@@ -157,7 +157,7 @@ $ exec docker run \
     --cap-add=SYS_PTRACE \
     -d \
     --restart=always \
-    dmoj/judge-tier1:latest \
+    areslolxd/runtimes-tier1:karel \
     run -p15001 -s -c /problems/judge.yml \
     "$BRIDGE_ADDRESS" "$JUDGE_NAME" "$JUDGE_KEY"
 ```

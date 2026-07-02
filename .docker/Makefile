@@ -1,15 +1,15 @@
 GIT_TAG ?= AddKarel
-TAG ?= latest
+TAG ?= karel
 
-.PHONY: all judge-tier1 judge-tier2 judge-tier3
+.PHONY: all runtimes-tier1 runtimes-tier2 runtimes-tier3
 
-all: judge-tier1 judge-tier2 judge-tier3
+all: runtimes-tier1 runtimes-tier2 runtimes-tier3
 
-judge-tier1:
-	cd tier1 && docker build --build-arg TAG="${GIT_TAG}" -t dmoj/judge-tier1 -t dmoj/judge-tier1:$(TAG) .
+runtimes-tier1:
+	cd tier1 && docker build --build-arg TAG="${GIT_TAG}" -t areslolxd/runtimes-tier1:$(TAG) .
 
-judge-tier2:
-	cd tier2 && docker build --build-arg TAG="${GIT_TAG}" -t dmoj/judge-tier2 -t dmoj/judge-tier2:$(TAG) .
+runtimes-tier2:
+	cd tier2 && docker build --build-arg TAG="${GIT_TAG}" -t areslolxd/runtimes-tier2:$(TAG) .
 
-judge-tier3:
-	cd tier3 && docker build --build-arg TAG="${GIT_TAG}" -t dmoj/judge-tier3 -t dmoj/judge-tier3:$(TAG) .
+runtimes-tier3:
+	cd tier3 && docker build --build-arg TAG="${GIT_TAG}" -t areslolxd/runtimes-tier3:$(TAG) .
