@@ -1,4 +1,4 @@
-FROM dmoj/runtimes-tier1
+FROM docker.io/dmoj/runtimes-tier1
 
 # Install Node.js (needed by the rekarel CLI compiler) and build the ReKarel C++ VM
 RUN apt-get update && \

@@ -1,4 +1,4 @@
-FROM dmoj/runtimes-tier3
+FROM docker.io/dmoj/runtimes-tier3
 
 # Node.js is already provided by dmoj/runtimes-tier3; install npm, the rekarel
 # CLI compiler, and build the ReKarel C++ VM on top of it
