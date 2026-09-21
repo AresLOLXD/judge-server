@@ -12,6 +12,11 @@ Also ships `dmoj-cli` for local/offline testing of problems without a site conne
 Not supported on Windows. First-class support is Debian Linux; FreeBSD is also supported
 with reduced runtime coverage.
 
+This is a fork (`areslolxd/judge-server`, `AddKarel` branch) that adds a Karel executor on
+top of upstream DMOJ. Docker runtime images for this fork are built via `.docker/Makefile`
+(`make -C .docker all`, or a single tier target) as `areslolxd/runtimes-tierN:karel`, from
+`GIT_TAG=AddKarel` — distinct from upstream's `dmoj/runtimes-tierN` images referenced in CI.
+
 ## Environment
 
 **This project uses a `uv`-managed virtualenv at `.venv/` — there is no `pip` binary inside
@@ -136,6 +141,11 @@ its `command`/`command_paths` (used by `autoconfig.py` to locate the runtime bin
 build the sandboxed invocation. To add a new language: create `dmoj/executors/<CODE>.py`
 subclassing the closest existing base class and follow an existing similar-language
 executor as a template — no registration step needed beyond the file existing.
+
+The Karel executor follows this pattern with the shared logic split out: `RKL23.py` (the
+discovered file, matching the `[A-Z0-9]+.py` naming rule) is a thin `Executor` subclass of
+`KarelExecutor`, which itself lives in `rekarel_executor.py` (undiscovered — lowercase name)
+alongside `CompiledExecutor`. Follow this split if adding another Karel-dialect executor.
 
 ### `dmoj/graders` — grading strategies
 - `standard.py` — classic input/output diffing via a `Checker` (see below).
